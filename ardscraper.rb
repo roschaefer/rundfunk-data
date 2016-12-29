@@ -9,10 +9,15 @@ end
 
 result = Wombat.crawl do
   base_url "http://www.ardmediathek.de/"
-  path 'tv/sendungen-a-z?buchstabe=A'
+  path 'tv/sendungen-a-z?buchstabe=Z'
 
   content 'css=.onlyWithJs .textWrapper', :iterator do
-    ardmediathekURL "xpath=a[contains(@class, 'textLink')]/@href"
+    title 'css=h4.headline'
+    station 'css=p.subtitle'
+    ardMediathek "xpath=a[contains(@class, 'textLink')]", :follow do
+      description 'css=.onlyWithJs .teasertext'
+    end
+    ardMediathekURL "xpath=a[contains(@class, 'textLink')]/@href"
     documentId "xpath=a[contains(@class, 'textLink')]/@href" do |s|
       s[/documentId=(\d+)/, 1]
     end
@@ -22,8 +27,6 @@ result = Wombat.crawl do
     issues 'css=p.dachzeile' do |s|
       s[/(\d+) Ausgabe/, 1]
     end
-    title 'css=h4.headline'
-    station 'css=p.subtitle'
   end
 end
 
