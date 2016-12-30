@@ -3,10 +3,7 @@ require 'csv'
 require 'pp'
 
 
-Wombat.configure do |config|
-  config.set_user_agent "Linux Mozilla"
-end
-
+header = ['title', 'station', 'description', 'issues', 'medium', 'character', 'url', 'imageURL', 'bcastId', 'documentId']
 media = ['radio', 'tv']
 characters = ('A'..'Z').to_a + ['0-9']
 scraped = []
@@ -49,7 +46,7 @@ media.each do |medium|
 end
 
 CSV.open("broadcasts.csv", "w", force_quotes: true) do |csv|
-  csv << ['title', 'station', 'description', 'issues', 'medium', 'character', 'url', 'imageURL', 'bcastId', 'documentId']
+  csv << header
   scraped.each do |row|
     csv << [row['title'], row['station'], row['ardMediathek'][0]['description'], row['issues'], row['medium'], row['character'], row['ardMediathekURL'], row['ardMediathek'][0]['imageURL'], row['bcastId'], row['documentId']]
   end
