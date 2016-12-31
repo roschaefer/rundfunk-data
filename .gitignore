@@ -1,2 +1,3 @@
 *.csv
 *.nq
+!backup/*
