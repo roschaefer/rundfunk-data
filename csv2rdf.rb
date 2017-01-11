@@ -3,7 +3,7 @@ require 'csv'
 require 'pry'
 
 def ont(prop)
-  "http://rundfunk-mitbestimmen.de/ontology/bc/#{prop}"
+  RDF::URI.new("http://rundfunk-mitbestimmen.de/ontology/bc/#{prop}")
 end
 
 medium_mapping = {}
@@ -14,21 +14,17 @@ end
 graph = RDF::Graph.new
 
 CSV.foreach('broadcasts.csv', :headers => true) do |row|
-  s = RDF::URI.new(ont("id##{row['id']}"))
-  p = RDF::Vocab::DC11.type
-  o = RDF::URI.new(ont('broadcast'))
-  graph << RDF::Statement(s, p, o)
+  node = ont("id##{row['id']}")
+  graph << RDF::Statement(node, RDF::Vocab::DC11.type, ont('broadcast'))
 
-
-  ['title', 'description'].each do |header|
-    p = RDF::URI.new(ont(header))
-    o = RDF::Literal.new(row[header])
-    graph << RDF::Statement(s, p, o)
-  end
-
-  p = RDF::URI.new(ont("medium"))
-  o = RDF::URI.new(medium_mapping[row['medium']])
-  graph << RDF::Statement(s, p, o)
+  statements = [
+    RDF::Statement(node, ont('description'), RDF::Literal.new(row['description'])),
+    RDF::Statement(node, ont('title'), RDF::Literal.new(row['title'])),
+    RDF::Statement(node, ont("medium"), medium_mapping[row['medium']]),
+    RDF::Statement(node, ont("mediathekId"), RDF::Literal::Integer.new(row['mediathek_identification'])),
+  ]
+  statements = statements.select {|s| s.predicate && s.object }
+  statements.each {|s| graph << s }
 end
 
 RDF::Writer.open("broadcasts.nq", format: :nquads) { |writer| writer << graph }
