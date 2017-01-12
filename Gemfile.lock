@@ -11,11 +11,11 @@ GEM
     bcp47 (0.3.3)
       i18n
     builder (3.2.2)
-    cayley (0.0.0)
     coderay (1.1.1)
     concurrent-ruby (1.0.2)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
+    curb (0.9.3)
     diff-lcs (1.2.5)
     domain_name (0.5.20161021)
       unf (>= 0.0.5, < 1.0.0)
@@ -204,7 +204,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  cayley
+  curb
   linkeddata
   pry
   wombat
