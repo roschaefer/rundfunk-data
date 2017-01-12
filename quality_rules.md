@@ -1,5 +1,6 @@
 Problems:
 
+# ARD
 * no description
 * station in title
 * description == title
@@ -8,7 +9,7 @@ Problems:
 * encoding problem
 * description contains 2016 (out of date)
 * wrong umlaute (ae, oe, ue)
-* station + "Podcasts" (Überblick)
+* station + "Podcasts" (Überblick) - unspecific
 * "Interviews" too unspecific
 * "Best of" too unspecific
 * Summary broadcast
@@ -16,19 +17,18 @@ Problems:
 * "Webexklusive inhalte der Sendung"
 * tagesschau24 (not really a broadcast)
 * "Auf ein Wort" different broadcasts (Bayern 1, NDR info)
-* "podcast" often not very clear - very general
-* "Das Interview"
 * duplicates after normalization (e.g. "Echo des Tages")
 * Lokalzeit XY (WDR) - extreme localization
 * Sportschau live - just the live issue to the same broadcast
 * "Auswahl von Sendungen"
 * "ausgewählte Sendungen zum Nachhören"
-* "Wiedersehen aus frühreren Sendungen"
+* "Wiedersehen aus früheren Sendungen"
 * description longer than 500
 * "Musiksendungen im Überblick"
 * SOKO "Köln, Kitzbühel, ... Leipzig"
+* Funkhaus Europa wird Cosmo
 
-
+# ZDF
 * "alle Kindersendungen im ZDF"
 * "ARD Sondersendung"
 * "noch einmal nachhören"
