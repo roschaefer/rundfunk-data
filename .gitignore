@@ -1,4 +1,7 @@
+BLAZEGRAPH_RELEASE_2_1_4/*
+silk/*
+tlr/*
 *.csv
 *.nq
-cayley.cfg
+tutorials/*
 !backup/*
