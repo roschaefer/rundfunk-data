@@ -3,5 +3,6 @@ silk/*
 tlr/*
 *.csv
 *.nq
+*.nt
 tutorials/*
 !backup/*

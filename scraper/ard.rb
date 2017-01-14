@@ -3,8 +3,15 @@ require 'csv'
 require 'pp'
 require 'linkeddata'
 require 'pry'
+require_relative '../lib/lib.rb'
 
-header = ['title', 'station', 'description', 'issues', 'medium', 'character', 'url', 'imageURL', 'bcastId', 'documentId']
+
+project_root = Pathname.new(File.dirname(__FILE__)).join('..')
+
+out_file = project_root.join('data/nt/scraped.nt')
+node_prefix = URI.join('file:///', out_file.realdirpath.to_s)
+
+
 media = ['radio', 'tv']
 characters = ('A'..'Z').to_a + ['0-9']
 scraped = []
@@ -49,27 +56,9 @@ media.each do |medium|
   end
 end
 
-#CSV.open("broadcasts.csv", "w", force_quotes: true) do |csv|
-  #csv << header
-  #scraped.each do |row|
-    #csv << [row['title'], row['station'], row['ardMediathek'][0]['description'], row['issues'], row['medium'], row['character'], row['ardMediathekURL'], row['ardMediathek'][0]['imageURL'], row['bcastId'], row['documentId']]
-  #end
-#end
-
-
-def ont(prop)
-  RDF::URI.new("http://rundfunk-mitbestimmen.de/ontology/bc/#{prop}")
-end
-
-medium_mapping = {}
-['tv', 'radio', 'other', 'online'].each do |key|
-  medium_mapping[key] = ont(key)
-end
-
 graph = RDF::Graph.new
 scraped.each_with_index do |scrape, i|
-  node = ont("id##{i}")
-
+  node = RDF::URI.new("#{node_prefix}/#{i}")
   graph <<  RDF::Statement(node, RDF::Vocab::DC11.type, ont('broadcast'))
 
   statements = [
@@ -77,7 +66,7 @@ scraped.each_with_index do |scrape, i|
    RDF::Statement(node, ont('station') ,     RDF::Literal.new(            scrape['station']                        ) ),
    RDF::Statement(node, ont('description') , RDF::Literal.new(            scrape['ardMediathek'][0]['description'] ) ),
    RDF::Statement(node, ont('issues') ,      RDF::Literal::Integer.new(   scrape['issues']                         ) ),
-   RDF::Statement(node, ont('medium') ,      medium_mapping[ scrape['medium']                                        ]),
+   RDF::Statement(node, ont('medium') ,      map(scrape['medium']                                                  ) ),
    RDF::Statement(node, ont('character') ,   RDF::Literal.new(            scrape['character']                      ) ),
    RDF::Statement(node, ont('url') ,         RDF::Literal.new(            scrape['ardMediathekURL']                ) ),
    RDF::Statement(node, ont('imageUrl') ,    RDF::Literal.new(            scrape['ardMediathek'][0]['imageURL']    ) ),
@@ -87,6 +76,6 @@ scraped.each_with_index do |scrape, i|
   statements.each {|s| graph << s }
 end
 
-RDF::Writer.open("scraped.nq", format: :nquads) { |writer| writer << graph }
+RDF::Writer.open(out_file) { |writer| writer << graph }
 
 
