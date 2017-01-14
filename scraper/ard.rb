@@ -17,8 +17,8 @@ characters = ('A'..'Z').to_a + ['0-9']
 scraped = []
 base_url =  "http://www.ardmediathek.de"
 
-media = [ 'tv']
-characters = ['Z']
+#media = [ 'tv']
+#characters = ['Z']
 
 media.each do |medium|
   characters.each do |character|
@@ -59,7 +59,7 @@ end
 graph = RDF::Graph.new
 scraped.each_with_index do |scrape, i|
   node = RDF::URI.new("#{node_prefix}/#{i}")
-  graph <<  RDF::Statement(node, RDF::Vocab::DC11.type, ont('broadcast'))
+  graph <<  RDF::Statement(node, RDF::Vocab::DC11.type, ont('scraped_broadcast'))
 
   statements = [
    RDF::Statement(node, ont('title') ,       RDF::Literal.new(            scrape['title']                          ) ),
