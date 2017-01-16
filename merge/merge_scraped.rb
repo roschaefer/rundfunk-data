@@ -3,17 +3,25 @@ require 'sparql'
 require 'pry'
 require_relative '../lib/lib.rb'
 
-repo = RDF::Blazegraph::Repository.new('http://localhost:9999/blazegraph/sparql')
-project_root = Pathname.new(File.dirname(__FILE__)).join('..')
-out_file = project_root.join('data/nt/out.nt')
+
+options = {}
+OptionParser.new do |opts|
+  opts.on("-h", "--host=url", String, 'blazegraph sparql endpoint') do |url|
+    options[:host] = url
+  end
+end.parse!
+missing_arguments = [:host].select {|o| options[o].nil? }
+missing_arguments.each { |a| raise OptionParser::MissingArgument.new(a) }
+
+repo = RDF::Blazegraph::Repository.new(options[:host])
 
 query = <<~QUERY
           Select ?broadcast ?scraped ?mediathekId
           Where {
-            ?broadcast <http://purl.org/dc/elements/1.1/type> <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/broadcast> .
-            ?scraped <http://purl.org/dc/elements/1.1/type> <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/scraped_broadcast> .
+            ?broadcast <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/primary_key> ?primaryKey .
+            ?scraped <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/scraped> ?website .
             ?broadcast <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/mediathekId> ?mediathekId .
-            ?scraped <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/mediathekId> ?mediathekId .
+            ?scraped   <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/mediathekId> ?mediathekId .
           }
         QUERY
 
@@ -65,5 +73,8 @@ sse.execute(repo) do |result|
   end
 end
 
-RDF::Writer.open(out_file) { |writer| writer << graph }
 
+puts "Before: #{repo.count} triples"
+puts "#{graph.count} statements in graph"
+repo << graph.statements
+puts "After: #{repo.count} triples"

@@ -1,3 +1,5 @@
+require 'rdf/blazegraph'
+require 'sparql'
 require 'wombat'
 require 'csv'
 require 'pp'
@@ -6,12 +8,15 @@ require 'pry'
 require_relative '../lib/lib.rb'
 
 
-project_root = Pathname.new(File.dirname(__FILE__)).join('..')
+options = {}
+OptionParser.new do |opts|
+  opts.on("-h", "--host=url", String, 'blazegraph sparql endpoint') do |url|
+    options[:host] = url
+  end
+end.parse!
+missing_arguments = [:host].select {|o| options[o].nil? }
+missing_arguments.each { |a| raise OptionParser::MissingArgument.new(a) }
 
-format = :ntriples
-out_file = project_root.join("data/rdf/scraped.#{format[0..1]}")
-
-node_prefix = URI.join('file:///', out_file.realdirpath.to_s)
 
 
 media = ['radio', 'tv']
@@ -59,10 +64,11 @@ media.each do |medium|
 end
 
 graph = RDF::Graph.new
-graph_uri = node_prefix
+graph_uri = RDF::URI.new(base_url)
 scraped.each_with_index do |scrape, i|
-  node = RDF::URI.new("#{node_prefix}/#{i}")
-  graph <<  RDF::Statement(node, RDF::Vocab::DC11.type, ont('scraped_broadcast'), graph_name: graph_uri)
+  node = RDF::URI.new(scrape['ardMediathekURL'])
+  graph <<  RDF::Statement(node, RDF::Vocab::DC11.type, ont('broadcast'), graph_name: graph_uri)
+  graph <<  RDF::Statement(node, ont('scraped'), graph_uri, graph_name: graph_uri)
 
   statements = [
    RDF::Statement(node, ont('title') ,       RDF::Literal.new(            scrape['title']                          ), graph_name: graph_uri),
@@ -79,6 +85,9 @@ scraped.each_with_index do |scrape, i|
   statements.each {|s| graph << s }
 end
 
-RDF::Writer.open(out_file, format: format) { |writer| writer << graph }
 
 
+repo = RDF::Blazegraph::Repository.new('http://localhost:9999/blazegraph/sparql')
+puts "Before: #{repo.count} triples"
+repo << graph.statements
+puts "After: #{repo.count} triples"
