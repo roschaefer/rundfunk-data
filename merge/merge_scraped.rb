@@ -54,22 +54,22 @@ end
 
 sse = SPARQL.parse(query)
 sse.execute(repo) do |result|
-  node = result['broadcast']
-  graph << RDF::Statement(node, RDF::Vocab::DC11.type, ont('broadcast'))
-  graph << RDF::Statement(node, ont('mediathekId') , result['mediathekId'] )
+  broadcast, scraped  = result['broadcast'], result['scraped']
+  graph << RDF::Statement(broadcast, RDF::Vocab::DC11.type, ont('broadcast'))
+  graph << RDF::Statement(broadcast, ont('mediathekId') , result['mediathekId'] )
 
-  build_broadcast_query(result['broadcast']).execute(repo) do |b_result|
-    graph << RDF::Statement(node, ont('description'), b_result['description'])
-    graph << RDF::Statement(node, ont('title'),       b_result['title'])
-    graph << RDF::Statement(node, ont("medium"),      b_result['medium'])
+  build_broadcast_query(broadcast).execute(repo) do |b_result|
+    graph << RDF::Statement(broadcast, ont('description'), b_result['description'])
+    graph << RDF::Statement(broadcast, ont('title'),       b_result['title'])
+    graph << RDF::Statement(broadcast, ont("medium"),      b_result['medium'])
   end
 
-  build_scraped_query(result['scraped']).execute(repo) do |s_result|
-    graph << RDF::Statement(node, ont("station"),      s_result['station'])
-    graph << RDF::Statement(node, ont("issues"),      s_result['issues'])
-    graph << RDF::Statement(node, ont("url"),      s_result['url'])
-    graph << RDF::Statement(node, ont("imageUrl"),      s_result['imageUrl'])
-    graph << RDF::Statement(node, ont("issues"),      s_result['issues'])
+  build_scraped_query(scraped).execute(repo) do |s_result|
+    graph << RDF::Statement(broadcast, ont("station"),      s_result['station'])
+    graph << RDF::Statement(broadcast, ont("issues"),      s_result['issues'])
+    graph << RDF::Statement(broadcast, ont("url"),      s_result['url'])
+    graph << RDF::Statement(broadcast, ont("imageUrl"),      s_result['imageUrl'])
+    graph << RDF::Statement(broadcast, ont("issues"),      s_result['issues'])
   end
 end
 
