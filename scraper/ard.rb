@@ -8,7 +8,9 @@ require_relative '../lib/lib.rb'
 
 project_root = Pathname.new(File.dirname(__FILE__)).join('..')
 
-out_file = project_root.join('data/nt/scraped.nt')
+format = :ntriples
+out_file = project_root.join("data/rdf/scraped.#{format[0..1]}")
+
 node_prefix = URI.join('file:///', out_file.realdirpath.to_s)
 
 
@@ -17,8 +19,8 @@ characters = ('A'..'Z').to_a + ['0-9']
 scraped = []
 base_url =  "http://www.ardmediathek.de"
 
-#media = [ 'tv']
-#characters = ['Z']
+media = [ 'tv']
+characters = ['Z']
 
 media.each do |medium|
   characters.each do |character|
@@ -57,25 +59,26 @@ media.each do |medium|
 end
 
 graph = RDF::Graph.new
+graph_uri = node_prefix
 scraped.each_with_index do |scrape, i|
   node = RDF::URI.new("#{node_prefix}/#{i}")
-  graph <<  RDF::Statement(node, RDF::Vocab::DC11.type, ont('scraped_broadcast'))
+  graph <<  RDF::Statement(node, RDF::Vocab::DC11.type, ont('scraped_broadcast'), graph_name: graph_uri)
 
   statements = [
-   RDF::Statement(node, ont('title') ,       RDF::Literal.new(            scrape['title']                          ) ),
-   RDF::Statement(node, ont('station') ,     RDF::Literal.new(            scrape['station']                        ) ),
-   RDF::Statement(node, ont('description') , RDF::Literal.new(            scrape['ardMediathek'][0]['description'] ) ),
-   RDF::Statement(node, ont('issues') ,      RDF::Literal::Integer.new(   scrape['issues']                         ) ),
-   RDF::Statement(node, ont('medium') ,      map(scrape['medium']                                                  ) ),
-   RDF::Statement(node, ont('character') ,   RDF::Literal.new(            scrape['character']                      ) ),
-   RDF::Statement(node, ont('url') ,         RDF::Literal.new(            scrape['ardMediathekURL']                ) ),
-   RDF::Statement(node, ont('imageUrl') ,    RDF::Literal.new(            scrape['ardMediathek'][0]['imageURL']    ) ),
-   RDF::Statement(node, ont('mediathekId') , RDF::Literal::Integer.new(   scrape['bcastId']                        ) ),
+   RDF::Statement(node, ont('title') ,       RDF::Literal.new(            scrape['title']                          ), graph_name: graph_uri),
+   RDF::Statement(node, ont('station') ,     RDF::Literal.new(            scrape['station']                        ), graph_name: graph_uri),
+   RDF::Statement(node, ont('description') , RDF::Literal.new(            scrape['ardMediathek'][0]['description'] ), graph_name: graph_uri),
+   RDF::Statement(node, ont('issues') ,      RDF::Literal::Integer.new(   scrape['issues']                         ), graph_name: graph_uri),
+   RDF::Statement(node, ont('medium') ,      map(scrape['medium']                                                  ), graph_name: graph_uri),
+   RDF::Statement(node, ont('character') ,   RDF::Literal.new(            scrape['character']                      ), graph_name: graph_uri),
+   RDF::Statement(node, ont('url') ,         RDF::Literal.new(            scrape['ardMediathekURL']                ), graph_name: graph_uri),
+   RDF::Statement(node, ont('imageUrl') ,    RDF::Literal.new(            scrape['ardMediathek'][0]['imageURL']    ), graph_name: graph_uri),
+   RDF::Statement(node, ont('mediathekId') , RDF::Literal::Integer.new(   scrape['bcastId']                        ), graph_name: graph_uri),
   ]
   statements = statements.select {|s| s.predicate && s.object }
   statements.each {|s| graph << s }
 end
 
-RDF::Writer.open(out_file) { |writer| writer << graph }
+RDF::Writer.open(out_file, format: format) { |writer| writer << graph }
 
 
