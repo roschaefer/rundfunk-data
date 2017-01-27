@@ -4,26 +4,6 @@ require 'pry'
 require_relative '../lib/lib.rb'
 
 
-options = {}
-OptionParser.new do |opts|
-  opts.on("-h", "--host=url", String, 'blazegraph sparql endpoint') do |url|
-    options[:host] = url
-  end
-end.parse!
-missing_arguments = [:host].select {|o| options[o].nil? }
-missing_arguments.each { |a| raise OptionParser::MissingArgument.new(a) }
-
-repo = RDF::Blazegraph::Repository.new(options[:host])
-
-query = <<~QUERY
-          Select ?broadcast ?scraped ?mediathekId
-          Where {
-            ?broadcast <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/primary_key> ?primaryKey .
-            ?scraped <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/scraped> ?website .
-            ?broadcast <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/mediathekId> ?mediathekId .
-            ?scraped   <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/mediathekId> ?mediathekId .
-          }
-        QUERY
 
 graph = RDF::Graph.new
 
@@ -52,29 +32,70 @@ def build_scraped_query(uri)
   SPARQL.parse(query)
 end
 
-sse = SPARQL.parse(query)
-sse.execute(repo) do |result|
-  broadcast, scraped  = result['broadcast'], result['scraped']
-  graph << RDF::Statement(broadcast, RDF::Vocab::DC11.type, ont('broadcast'))
-  graph << RDF::Statement(broadcast, ont('mediathekId') , result['mediathekId'] )
+#sse = SPARQL.parse(query)
+#sse.execute(repo) do |result|
+  #broadcast, scraped  = result['broadcast'], result['scraped']
+  #graph << RDF::Statement(broadcast, RDF::Vocab::DC11.type, ont('broadcast'))
+  #graph << RDF::Statement(broadcast, ont('mediathekId') , result['mediathekId'] )
 
-  build_broadcast_query(broadcast).execute(repo) do |b_result|
-    graph << RDF::Statement(broadcast, ont('description'), b_result['description'])
-    graph << RDF::Statement(broadcast, ont('title'),       b_result['title'])
-    graph << RDF::Statement(broadcast, ont("medium"),      b_result['medium'])
-  end
+  #build_broadcast_query(broadcast).execute(repo) do |b_result|
+    #graph << RDF::Statement(broadcast, ont('description'), b_result['description'])
+    #graph << RDF::Statement(broadcast, ont('title'),       b_result['title'])
+    #graph << RDF::Statement(broadcast, ont("medium"),      b_result['medium'])
+  #end
 
-  build_scraped_query(scraped).execute(repo) do |s_result|
-    graph << RDF::Statement(broadcast, ont("station"),      s_result['station'])
-    graph << RDF::Statement(broadcast, ont("issues"),      s_result['issues'])
-    graph << RDF::Statement(broadcast, ont("url"),      s_result['url'])
-    graph << RDF::Statement(broadcast, ont("imageUrl"),      s_result['imageUrl'])
-    graph << RDF::Statement(broadcast, ont("issues"),      s_result['issues'])
-  end
+  #build_scraped_query(scraped).execute(repo) do |s_result|
+    #graph << RDF::Statement(broadcast, ont("station"),      s_result['station'])
+    #graph << RDF::Statement(broadcast, ont("issues"),      s_result['issues'])
+    #graph << RDF::Statement(broadcast, ont("url"),      s_result['url'])
+    #graph << RDF::Statement(broadcast, ont("imageUrl"),      s_result['imageUrl'])
+    #graph << RDF::Statement(broadcast, ont("issues"),      s_result['issues'])
+  #end
+#end
+
+
+#puts "Before: #{repo.count} triples"
+#puts "#{graph.count} statements in graph"
+#repo << graph.statements
+#puts "After: #{repo.count} triples"
+
+def get_all_stations
+  query = <<~BC
+          SELECT REDUCED ?station WHERE {
+            ?scraped <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/station> ?station .
+          }
+          BC
+  SPARQL.parse(query)
 end
 
+def run_query
+  repo = RDF::Blazegraph::Repository.new(Config['sparql_endpoint'])
+  query = <<~QUERY
+          Select ?broadcast ?scraped ?mediathekId ?primaryKey
+          Where {
+            ?broadcast <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/primary_key> ?primaryKey .
+            ?scraped <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/scraped> ?website .
+            ?broadcast <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/mediathekId> ?mediathekId .
+            ?scraped   <http://rdf.rundfunk-mitbestimmen.de/ontology/bc/mediathekId> ?mediathekId .
+          }
+  QUERY
 
-puts "Before: #{repo.count} triples"
-puts "#{graph.count} statements in graph"
-repo << graph.statements
-puts "After: #{repo.count} triples"
+  stations = []
+  get_all_stations.execute(repo).each_with_index do |row, i|
+    puts row['station']
+  end
+
+  #sse = SPARQL.parse(query)
+  #sse.execute(repo) do |result|
+    #broadcast_uri, scraped_uri  = result['broadcast'], result['scraped']
+
+    #b = Broadcast.find(result['primaryKey'].to_s.to_i)
+
+    #build_scraped_query(scraped_uri).execute(repo) do |s_result|
+      #s = stations.find {|s| s.name == s_result['station'].to_s } 
+      #b.station = s
+    #end
+
+    #p b
+  #end
+end

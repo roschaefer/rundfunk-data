@@ -1,0 +1,4 @@
+backend_path = /path/to/packend
+db_environment = development
+sparql_endpoint = http://localhost:9999/blazegraph/sparql
+
