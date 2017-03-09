@@ -6,6 +6,7 @@ gem 'pry'
 gem 'linkeddata'
 gem 'rdf-blazegraph'
 gem 'curb'
+gem 'faraday'
 
 
 # necessary gems for backend
