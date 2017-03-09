@@ -7,6 +7,7 @@ gem 'linkeddata'
 gem 'rdf-blazegraph'
 gem 'curb'
 gem 'faraday'
+gem 'spira'
 
 
 # necessary gems for backend
