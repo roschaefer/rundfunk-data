@@ -6,6 +6,7 @@ require_relative "#{Config['backend_path']}/config/application"
 Rails.application.load_tasks
 
 namespace :graph do
+
   desc 'Update relational database with graph data'
   task :merge => [:environment] do
     require_relative 'merge/merge_scraped'
@@ -39,4 +40,7 @@ namespace :graph do
     end
   end
 end
+
+desc 'Run default graph task'
+task :graph => ['graph:scrape:ard']
 
