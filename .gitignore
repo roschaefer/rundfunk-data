@@ -4,5 +4,6 @@ tlr/*
 *.csv
 *.nq
 *.nt
+*.rdf
 tutorials/*
 !backup/*

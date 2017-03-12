@@ -1,7 +1,8 @@
 require_relative '../models/broadcast.rb'
 
 def scrape
- Spira.repository = RDF::Repository.new
+  Spira.repository = RDF::Repository.new
+  sparql = SPARQL::Client.new('http://localhost:9999/blazegraph/sparql')
 
   base_url = 'http://www.ardmediathek.de'
   conn = Faraday.new(url: base_url)
@@ -25,22 +26,24 @@ def scrape
     end
   end
 
-  response = conn.get('appdata/servlet/radio?json')
-  js = JSON.parse(response.body)
-  js['sections'][0]['modCons'][0]['mods'][0]['inhalte'].each do |b|
-      url = b['link']['url']
-      #bjs = JSON.parse(Faraday.get(url).body)
-      #description = bjs['sections'][0]['modCons'][0]['mods'][0]['inhalte'][0]['teaserText']
-      broadcast = Broadcast.for(RDF::URI.new(url))
-      broadcast.title= b['ueberschrift']
-      broadcast.station= b['unterzeile']
-      broadcast.issues= b['dachzeile'].gsub(/\D/, '').to_i
-      broadcast.imageUrl= b['bilder'][0]['schemaUrl'].gsub('##width##', '648')
-      broadcast.url= url
-      broadcast.description= nil
-      broadcast.medium= :radio
-      broadcast.save
-  end
+  #response = conn.get('appdata/servlet/radio?json')
+  #js = JSON.parse(response.body)
+  #js['sections'][0]['modCons'][0]['mods'][0]['inhalte'].each do |b|
+      #url = b['link']['url']
+      ##bjs = JSON.parse(Faraday.get(url).body)
+      ##description = bjs['sections'][0]['modCons'][0]['mods'][0]['inhalte'][0]['teaserText']
+      #broadcast = Broadcast.for(RDF::URI.new(url))
+      #broadcast.title= b['ueberschrift']
+      #broadcast.station= b['unterzeile']
+      #broadcast.issues= b['dachzeile'].gsub(/\D/, '').to_i
+      #broadcast.imageUrl= b['bilder'][0]['schemaUrl'].gsub('##width##', '648')
+      #broadcast.url= url
+      #broadcast.description= nil
+      #broadcast.medium= :radio
+      #broadcast.save!
+  #end
 
-  File.open("spira.nt", "w") {|f| f << Spira.repository.dump(:ntriples)}
+  Spira.repository.each_graph do |graph|
+    sparql.insert_data(graph)
+  end
 end
